@@ -4,6 +4,10 @@
 
 Kinetic is an interactive project planning simulator built for the Teens Hack Houston 2026 Business Track. Explore a fictional creative agency’s client website launch by selecting stages on an orbital map and adjusting Development staffing.
 
+![Kinetic baseline with one developer and a day 19 forecast](https://github.com/user-attachments/assets/3ddbc9fe-3fec-4610-8bc1-895dd9067168)
+
+![Kinetic staffing comparison showing day 19 versus day 13](https://github.com/user-attachments/assets/edf47982-c020-4111-905e-a8ba130d384e)
+
 ## Run locally
 
 From the repository root, start the preview with Node.js. No package installation is required.
