@@ -1,5 +1,7 @@
 # Kinetic
 
+[Watch the video pitch](https://youtu.be/fdrY9zwF-6Q)
+
 Kinetic is an interactive project planning simulator built for the Teens Hack Houston 2026 Business Track. Explore a fictional creative agency’s client website launch by selecting stages on an orbital map and adjusting Development staffing.
 
 ## Run locally
