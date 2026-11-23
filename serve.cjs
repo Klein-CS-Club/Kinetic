@@ -1,7 +1,10 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
-const types = {'simulation.html':'text/html','atlas.css':'text/css','atlas.js':'text/javascript','index.html':'text/html','style.css':'text/css','app.js':'text/javascript','planets.js':'text/javascript'};
+const types = {'flight.js':'text/javascript','simulation.html':'text/html','atlas.css':'text/css','atlas.js':'text/javascript','index.html':'text/html','style.css':'text/css','app.js':'text/javascript','planets.js':'text/javascript'};
+for(const file of fs.readdirSync(path.join(__dirname,'assets'))){
+ types['assets/'+file]=({'.js':'text/javascript','.svg':'image/svg+xml','.ttf':'font/ttf','.jpg':'image/jpeg'})[path.extname(file)]||'text/plain';
+}
 http.createServer((req,res) => {
   const file = req.url === '/' ? 'index.html' : req.url.slice(1);
   if (!Object.hasOwn(types,file)) {res.writeHead(404).end(); return;}
