@@ -45,5 +45,5 @@ document.addEventListener('click',e=>{
   if(!soundEnabled)return;
   const key=el.matches('a,.object,[data-go],#tools,#view,#parent')?'sweep':'click';
   const audio=sounds[key] ||= new Audio('assets/action-'+key+'.wav');
-  audio.volume=key==='sweep'?.15:.24;audio.currentTime=0;audio.play().catch(()=>{});
+  audio.volume=key==='sweep'?.10:.24;audio.currentTime=0;audio.play().catch(()=>{});
 },true);
