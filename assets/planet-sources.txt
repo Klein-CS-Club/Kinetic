@@ -3,3 +3,6 @@ https://github.com/jeromeetienne/threex.planets/tree/master/images
 Planet texture maps by James Hastings-Trew, Planet Pixel Emporium.
 Solar System Scope planet and lunar textures, CC BY 4.0, via astrabros/solarsystem-textures-8k (ba16b3b). Converted to WebP, maximum width 4096. https://www.solarsystemscope.com/textures/
 Rock Face 03 surface: Poly Haven, CC0. https://polyhaven.com/a/rock_face_03
+Saturn ring map: Solar System Scope, CC BY 4.0 (2k_saturn_ring_alpha.png).
+Earth clouds: James Hastings-Trew / threex.planets, inverted original transparency mask.
+Earth and Mars relief: earthbump1k.jpg and marsbump1k.jpg from the same threex.planets collection.

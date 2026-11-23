@@ -64,3 +64,4 @@ h1{font:400 clamp(48px,5.5vw,94px)/1.01 var(--serif);letter-spacing:-.046em;marg
   .footer-identity { gap:12px; }
 }
 @font-face{font-family:Space;src:url(assets/body.ttf)}@font-face{font-family:Syne;src:url(assets/display.ttf)}body{background:#030405;color:#f6f2ea;font-family:Space,Arial,sans-serif}.bar,.site-footer{background:transparent;border-color:#ffffff24}.brand,h1,h2,.deadline strong{font-family:Syne,sans-serif;letter-spacing:-.065em}h1 em{font-style:normal;color:#ff9473}.eyebrow,.route-label{color:#ff9473}.inspector,.result,.map,.deadline{background-color:#101116;border-color:#ffffff29}.bar a{font-size:14px}
+@media(hover:hover) and (pointer:fine){button[data-pointer]{border-color:#ffffff66;background-image:radial-gradient(90px circle at var(--px) var(--py),#ffffff0c,transparent)}a[data-pointer]{text-decoration:underline;text-underline-offset:.3em}}

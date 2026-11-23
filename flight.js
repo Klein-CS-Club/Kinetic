@@ -11,8 +11,8 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') toggleMenu(f
 function ready() { document.body.classList.add('ready'); }
 function startUniverse() {
   const T = THREE, flight = document.querySelector('#flight');
-  const renderer = new T.WebGLRenderer({antialias:true, alpha:true, powerPreference:'low-power'});
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.65));
+  const renderer = new T.WebGLRenderer({antialias:true, alpha:true, powerPreference:'default'});
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   const canvas = renderer.domElement;
   const camera = new T.PerspectiveCamera(48,1,.05,250);
   const scene = new T.Scene();
@@ -23,8 +23,12 @@ function startUniverse() {
   const materials=names.map((name,i)=>i===8?new T.MeshBasicMaterial({color:colors[i]}):new T.MeshStandardMaterial({color:colors[i],roughness:1}));
   function loadSurface(i){
     const mat=materials[i];if(mat.userData.loading)return;mat.userData.loading=true;
+    if(i===4||i===5){
+      mat.bumpScale=i===4?.012:.006;
+      mat.bumpMap=loader.load('assets/'+names[i].toLowerCase()+'-relief.jpg',()=>{mat.needsUpdate=true});
+    }
     loader.load('assets/surface-'+names[i].toLowerCase()+'.webp',map=>{
-      map.colorSpace=T.SRGBColorSpace;mat.map=map;mat.color.set(0xffffff);mat.needsUpdate=true;
+      map.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());map.colorSpace=T.SRGBColorSpace;mat.map=map;mat.color.set(0xffffff);mat.needsUpdate=true;
     });
   }
   const sphere=new T.SphereGeometry(1,72,48);
@@ -34,8 +38,14 @@ function startUniverse() {
   const film=new T.Group(),system=new T.Group();scene.add(film,system);
   const sizes=[1.55,1.48,1.6,2,1.05,1.3,1.25,.95,2.5];
   const destinations=sizes.map((r,i)=>planet(film,i,r,0,0,-26*i));
-  const rings=new T.Mesh(new T.RingGeometry(1.38,2.13,120),new T.MeshBasicMaterial({color:0xe7ceac,side:T.DoubleSide,transparent:true,opacity:.75}));
+  const ringGeometry=new T.RingGeometry(1.28,2.24,192);
+  const pos=ringGeometry.attributes.position,uv=ringGeometry.attributes.uv;
+  for(let i=0;i<pos.count;i++)uv.setXY(i,(Math.hypot(pos.getX(i),pos.getY(i))-1.28)/.96,.5);
+  const ringMap=loader.load('assets/saturn-rings.png');ringMap.colorSpace=T.SRGBColorSpace;
+  const rings=new T.Mesh(ringGeometry,new T.MeshBasicMaterial({map:ringMap,side:T.DoubleSide,transparent:true,depthWrite:false}));
   rings.rotation.set(1.16,.16,-.27);destinations[2].add(rings);
+  const clouds=new T.Mesh(sphere,new T.MeshStandardMaterial({color:0xffffff,alphaMap:loader.load('assets/earth-cloud-alpha.jpg'),opacity:.78,transparent:true,depthWrite:false,roughness:1}));
+  clouds.scale.setScalar(1.006);destinations[5].add(clouds);
   const glowCanvas=document.createElement('canvas');glowCanvas.width=glowCanvas.height=128;
   const ctx=glowCanvas.getContext('2d'),grad=ctx.createRadialGradient(64,64,5,64,64,64);
   grad.addColorStop(0,'#ffcf78');grad.addColorStop(.35,'#ff8e3b99');grad.addColorStop(1,'#ff731100');ctx.fillStyle=grad;ctx.fillRect(0,0,128,128);
@@ -58,11 +68,11 @@ function startUniverse() {
   const starData=new Float32Array(5200*3);
   for(let i=0;i<starData.length;i+=3){starData[i]=(Math.random()-.5)*190;starData[i+1]=(Math.random()-.5)*120;starData[i+2]=Math.random()*-290+40}
   const starsGeom=new T.BufferGeometry();starsGeom.setAttribute('position',new T.BufferAttribute(starData,3));
-  const stars=new T.Points(starsGeom,new T.PointsMaterial({color:0xc5d4e3,size:.065,sizeAttenuation:true}));scene.add(stars);
+  const stars=new T.Points(starsGeom,new T.PointsMaterial({fog:false,color:0xe5ecf4,size:.085,sizeAttenuation:true}));scene.add(stars);
   const stellarColors=new Float32Array(starData.length);
   for(let i=0;i<starData.length;i+=3){const v=.2+Math.random()*.8;stellarColors.set([v,v*(.72+Math.random()*.28),v*(.7+Math.random()*.3)],i)}
   starsGeom.setAttribute('color',new T.BufferAttribute(stellarColors,3));stars.material.vertexColors=true;
-  const beacons=new T.BufferGeometry();beacons.setAttribute('position',new T.BufferAttribute(starData.slice(0,690),3));scene.add(new T.Points(beacons,new T.PointsMaterial({color:0xfef0ce,size:.16})));
+  const beacons=new T.BufferGeometry();beacons.setAttribute('position',new T.BufferAttribute(starData.slice(0,690),3));scene.add(new T.Points(beacons,new T.PointsMaterial({fog:false,color:0xfef0ce,size:.16})));
   const boundary=new T.Mesh(sphere,new T.ShaderMaterial({transparent:true,depthWrite:false,side:T.FrontSide,
     vertexShader:'varying vec3 n; varying vec3 v; void main(){vec4 p=modelViewMatrix*vec4(position,1.);n=normalize(normalMatrix*normal);v=normalize(-p.xyz);gl_Position=projectionMatrix*p;}',
     fragmentShader:'varying vec3 n; varying vec3 v; void main(){float rim=pow(1.-abs(dot(normalize(n),normalize(v))),3.);gl_FragColor=vec4(.38,.65,.95,.016+.64*rim);}'
@@ -87,7 +97,7 @@ function startUniverse() {
     const spread=Math.max(3,buttons.length*.69);
     const root=!get(id).parent,radius=root?Math.max(14,spread*2):spread+2;
     boundary.scale.setScalar(radius);boundary.userData.root=root;
-    if(nid!==id||root){angle=0;tilt=.30;zoom=zoomTarget=root?radius*2.95/Math.min(1,map.clientWidth/map.clientHeight):spread*2.7;nid=id}
+    if(nid!==id){momentum=0;angle=0;tilt=.30;zoomTarget=root?radius*2.95/Math.min(1,map.clientWidth/map.clientHeight):spread*2.7;if(!nid||reduced.matches)zoom=zoomTarget;nid=id}
     bodies=buttons.map((button,i)=>{
       const kind=button.dataset.kind,ph=i*2*Math.PI/buttons.length-.45;
       const node=get(button.dataset.id),skin=node.skin||'',idx=Math.max(0,names.indexOf(skin||(kind==='Moon'?'Moon':'Earth')));
@@ -139,9 +149,11 @@ function startUniverse() {
     const width=holder.clientWidth,height=holder.clientHeight;if(!width||!height)return;
     if(w!==width||h!==height){w=width;h=height;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
     if(inWork){
-      scene.fog=null;zoom+=(zoomTarget-zoom)*(reduced.matches?1:.19);if(!drag&&!reduced.matches){angle+=momentum;momentum*=.88}const a=angle+(reduced.matches?0:time*.018);
+      scene.fog=null;zoom+=(zoomTarget-zoom)*(reduced.matches?1:1-Math.exp(-dt*12));if(!drag&&!reduced.matches){angle+=momentum;momentum*=Math.exp(-dt*8)}const a=angle+(reduced.matches?0:time*.018);
       camera.position.set(Math.sin(a)*Math.cos(tilt)*zoom,Math.sin(tilt)*zoom,Math.cos(a)*Math.cos(tilt)*zoom);camera.lookAt(0,0,0);camera.updateMatrixWorld();
       bodies.forEach((b,i)=>{projection.copy(b.position).project(camera);const btn=buttons[i];btn.style.left=(projection.x*.5+.5)*100+'%';btn.style.top=(.5-projection.y*.5)*100+'%';btn.style.visibility=projection.z>1?'hidden':'visible';b.rotation.y=reduced.matches?0:time*.04});
+    }else if(document.body.classList.contains('choosing')){
+      film.visible=false;scene.fog=null;camera.position.set(0,6,25);camera.rotation.set(0,0,0);
     }else{
       const first=document.querySelector('.checkpoint'),intro=first.offsetTop;
       const raw=scrollY<intro?scrollY/intro-1:(scrollY-intro)/first.offsetHeight;
@@ -152,7 +164,7 @@ function startUniverse() {
       const entry=T.MathUtils.clamp(scrollY/intro,0,1);
       const onFlight=!document.body.classList.contains('choosing');
       film.visible=onFlight&&entry>.03;
-      flightFog.density=.035+.35*(1-entry)**3;scene.fog=flightFog;
+      flightFog.density=.014+.35*(1-entry)**3;scene.fog=flightFog;
       drift.lerp(pointer,.08);
       const movement=reduced.matches?0:1,aspect=Math.min(1.8,camera.aspect);
       const curve=t=>2.3*Math.sin(t*1.73);
@@ -166,7 +178,7 @@ function startUniverse() {
       const t=travel,bank=Math.sin(2*Math.PI*t)*movement;
       camera.position.set(curve(t)+drift.x*.12*movement,19*(1-entry)+Math.cos(t*1.8)*1.05+drift.y*.1*movement,9-t*26);
       camera.rotation.set(.035*bank,-.08*bank,.052*bank);
-      const clock=reduced.matches?0:time;
+      const clock=reduced.matches?0:time;clouds.rotation.y=clock*.009;
       moons.forEach((m,i)=>{m.position.copy(destinations[i].position);m.position.x+=2.1*Math.cos(clock*.13+i);m.position.z+=2.1*Math.sin(clock*.13+i);m.position.y+=.52*Math.sin(clock*.13+i)});
       debris.forEach((r,i)=>{transform.position.set(r.x+Math.sin(clock*.19+i)*1.9,r.y+Math.sin(clock*.11+i)*.8,r.z+Math.cos(clock*.15+i)*2.6);transform.scale.set(r.size,r.size*.65,r.size*.85);transform.rotation.set(i+clock*.14,i*.3,clock*.1);transform.updateMatrix();rocks.setMatrixAt(i,transform.matrix)});rocks.instanceMatrix.needsUpdate=true;
 
@@ -182,13 +194,17 @@ function updateChrome(){document.body.classList.toggle("pastTitle",scrollY>inner
 addEventListener("scroll",updateChrome,{passive:true});updateChrome();
 const captions=[...document.querySelectorAll('.checkpoint')];
 function checkpointText(){
-  const height=innerHeight;
-  document.querySelector("#road").style.setProperty("--travel",Math.max(0,Math.min(1,(scrollY-height)/(8*captions[0].offsetHeight))));
-  captions.forEach(section=>{
-    const offset=section.getBoundingClientRect().top/section.offsetHeight;
-    const opacity=Math.max(0,Math.min(1,(1-Math.abs(offset)) * 2.1-.5));
-    const pin=document.querySelector('#road a[href="#'+section.id+'"]');pin.classList.toggle('current',Math.abs(offset)<.5);
-    const card=section.firstElementChild;card.style.opacity=opacity;card.style.visibility=opacity?'visible':'hidden';
+  if(document.querySelector('#home').hidden)return;
+  const stride=captions[0].offsetHeight;
+  const progress=(scrollY-captions[0].offsetTop)/stride;
+  document.querySelector('#road').style.setProperty('--travel',Math.max(0,Math.min(1,progress/8)));
+  captions.forEach((section,i)=>{
+    const distance=Math.abs(progress-i);
+    const visible=distance<.32 && scrollY>=innerHeight*.96;
+    const card=section.firstElementChild;
+    card.style.visibility=visible?'visible':'hidden';
+    card.style.opacity=visible?Math.min(1,(.32-distance)/.13):0;
+    document.querySelector('#road a[href="#'+section.id+'"]').classList.toggle('current',distance<.5);
   });
 }
 addEventListener('scroll',checkpointText,{passive:true});addEventListener('resize',checkpointText);checkpointText();
