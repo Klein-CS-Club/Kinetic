@@ -19,7 +19,18 @@ const get=id=>nodes.find(n=>n.id===id),children=id=>nodes.filter(n=>n.parent===i
 function leaves(n){const kids=children(n.id);return kids.length?kids.flatMap(leaves):[n]}
 function path(n){return n.parent?[...path(get(n.parent)),n]:[n]}
 function openNode(id){location.hash='explore/'+id}
-$('samples').innerHTML=catalogs.map(([name,kind],i)=>`<a class="card" href="#explore/org${i}"><div><small>${kind}</small><strong>${name}</strong></div>↗</a>`).join('');
+let panelOpen=false;
+function showChooser(){
+ const roots=nodes.filter(n=>!n.parent);
+ $('universes').innerHTML=roots.map(n=>`<a href="#explore/${n.id}"><span>${esc(n.name)}</span> ↗</a>`).join('');
+}
+$('newUniverse').onclick=()=>{$('universeForm').reset();$('universeDialog').showModal()};
+$('universeForm').onsubmit=e=>{
+ e.preventDefault();const data=new FormData(e.target),name=data.get('name').trim();
+ if(!name)return;
+ const id=crypto.randomUUID();nodes.push({id,parent:'',name,description:data.get('description').trim(),kind:'Universe',effort:0,status:'Planned',owner:'',due:'',dep:''});
+ localStorage.setItem('kinetic.atlas.v2',JSON.stringify(nodes));$('universeDialog').close();openNode(id);
+};
 function schedule(tasks,slots){
  const jobs=tasks.filter(n=>n.status!=='Done'),finish=new Map(),workers=Array(slots).fill(0);
  while(jobs.length){const options=jobs.filter(n=>!jobs.some(p=>p.id===n.dep));if(!options.length)return null;
@@ -30,20 +41,24 @@ function schedule(tasks,slots){
 }
 function render(){
  const [mode,id]=location.hash.slice(1).split('/'),show=mode==='explore';
- $('workspace').hidden=!show;$('home').hidden=show;if(!show)return;
- const n=get(id)||get('org0');if(active!==n.id){scenario=false;capacity=1;active=n.id}
+ const n=get(id),inside=show&&Boolean(n);
+ $('workspace').hidden=!inside;$('chooser').hidden=!show||inside;$('home').hidden=show;
+ document.body.classList.toggle('working',inside);document.body.classList.toggle('choosing',show&&!inside);
+ if(!inside){if(show)showChooser();return}
+ if(active!==n.id){scenario=false;capacity=1;active=n.id}
  const items=children(n.id),tasks=leaves(n),done=tasks.filter(t=>t.status==='Done').length;
- $('toolbar').innerHTML='<div>'+path(n).map(t=>`<button class="crumb" data-go="${t.id}">${esc(t.name)}</button>`).join(' / ')+'</div><select aria-label="Organization" id="org">'+nodes.filter(t=>!t.parent).map(t=>`<option value="${t.id}" ${t.id===path(n)[0].id?'selected':''}>${esc(t.name)}</option>`).join('')+'</select>';
- $('org').onchange=e=>openNode(e.target.value);
- $('space').innerHTML=`<small class="kicker">${esc(n.kind.toUpperCase())}</small><h2>${esc(n.name)}</h2><div class="actions"><button id="view">${list?'Orbital map':'List view'}</button><button id="parent" ${n.parent?'':'hidden'}>↑ Up one level</button><button id="add">＋ Add item</button></div><div class="${list?'list':'map'}">${(items.length?items:[n]).map((t,i)=>`<button class="${list?'':'object'}" ${items.length?'data-go="'+t.id+'"':'id="leafEdit"'}><strong>${esc(t.name)}</strong><small>${esc(t.kind)} · ${esc(t.status)}</small></button>`).join('')}</div>`;
- $('details').innerHTML=`<small class="kicker">INSPECTOR</small><h2>${esc(n.name)}</h2><p>${done} of ${tasks.length} leaf items complete</p><p>${esc(n.owner||'Unassigned')}${n.due?' · Due '+esc(n.due):''}</p>${n.dep?'<p>Starts after '+esc(get(n.dep)?.name)+'</p>':''}<div class="actions"><button id="edit">Edit details</button><button id="download">Export atlas</button></div><hr><small class="kicker">FINISH FORECAST</small><h2>Day ${schedule(tasks,scenario?capacity:1)}</h2><p>From project start · ${scenario?capacity:1} available worker${scenario&&capacity>1?'s':''}</p>${scenario?`<label>Scenario capacity<select id="cap">${[1,2,3,4].map(v=>`<option ${v===capacity?'selected':''}>${v}</option>`).join('')}</select></label><p>Baseline · day ${schedule(tasks,1)}</p>`:''}<div class="actions"><button id="scenario">${scenario?'Discard scenario':'Compare staffing'}</button></div><a href="simulation.html">Studio North simulation ↗</a>`;
+ $('toolbar').innerHTML=`<button id="tools" aria-expanded="${panelOpen}">☷ &nbsp; Workspace tools</button><div><a href="#explore">Universes</a> / ${path(n).map(t=>t===n?esc(t.name):`<button class="crumb" data-go="${t.id}">${esc(t.name)}</button>`).join(' / ')}</div>`;
+ $('details').hidden=!panelOpen;
+ $('tools').onclick=()=>{panelOpen=!panelOpen;$('details').hidden=!panelOpen;$('tools').setAttribute('aria-expanded',panelOpen)};
+ $('space').innerHTML=`<div class="${list?'list':'map'}">${(items.length?items:n.parent?[n]:[]).map((t,i)=>`<button class="${list?'':'object'}" ${items.length?'data-go="'+t.id+'"':'id="leafEdit"'}><strong>${esc(t.name)}</strong><small>${esc(t.kind)} · ${esc(t.status)}</small></button>`).join('')}</div>`;
+ $('details').innerHTML=`<label>Add to this level<select id="newKind"><option>Project</option><option>Cluster</option><option>Galaxy</option><option>Stellar system</option><option>Planet</option><option>Task</option></select></label><div class="actions"><button id="view">${list?'Orbital map':'List view'}</button><button id="parent" ${n.parent?'':'hidden'}>↑ Up one level</button><button id="add">Add item</button></div><p>${esc(n.description||'')}</p><p>${done} of ${tasks.length} leaf items complete</p><p>${esc(n.owner||'Unassigned')}${n.due?' · Due '+esc(n.due):''}</p>${n.dep?'<p>Starts after '+esc(get(n.dep)?.name)+'</p>':''}<div class="actions"><button id="edit">Edit details</button><button id="download">Export atlas</button></div><hr><small class="kicker">FINISH FORECAST</small><h2>Day ${schedule(tasks,scenario?capacity:1)}</h2><p>From project start · ${scenario?capacity:1} available worker${scenario&&capacity>1?'s':''}</p>${scenario?`<label>Scenario capacity<select id="cap">${[1,2,3,4].map(v=>`<option ${v===capacity?'selected':''}>${v}</option>`).join('')}</select></label><p>Baseline · day ${schedule(tasks,1)}</p>`:''}<div class="actions"><button id="scenario">${scenario?'Discard scenario':'Compare staffing'}</button></div>`;
  window.mountSystem?.(n.id);document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>openNode(b.dataset.go));
  $('parent').onclick=()=>openNode(n.parent);$('view').onclick=()=>{list=!list;localStorage.setItem('kinetic.view',list?'list':'orbit');render()};$('add').onclick=()=>edit(n,true);$('edit').onclick=()=>edit(n,false);if($('leafEdit'))$('leafEdit').onclick=()=>edit(n,false);
  $('download').onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(nodes,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='kinetic-atlas.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
  $('scenario').onclick=()=>{scenario=!scenario;capacity=2;render()};if($('cap'))$('cap').onchange=e=>{capacity=Number(e.target.value);render()};
 }
 function edit(n,create){
- editing={n,create};const f=$('form').elements;const value=create?{name:'',kind:'Task',owner:'',due:'',effort:1,status:'Planned',dep:''}:n;
+ editing={n,create};const f=$('form').elements;const value=create?{name:'',kind:$('newKind').value,owner:'',due:'',effort:1,status:'Planned',dep:''}:n;
  for(const key of ['name','kind','owner','due','effort','status'])f[key].value=value[key];
  function dependsOn(t){return t.id===n.id||Boolean(t.dep&&dependsOn(get(t.dep)))}
  const eligible=leaves(path(n)[0]).filter(t=>t.id!==n.id&&(create||!dependsOn(t)));
