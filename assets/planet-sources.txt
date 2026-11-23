@@ -1,3 +1,5 @@
 Jupiter, Earth, Venus and Mars surface maps from the threex.planets collection:
 https://github.com/jeromeetienne/threex.planets/tree/master/images
 Planet texture maps by James Hastings-Trew, Planet Pixel Emporium.
+Solar System Scope planet and lunar textures, CC BY 4.0, via astrabros/solarsystem-textures-8k (ba16b3b). Converted to WebP, maximum width 4096. https://www.solarsystemscope.com/textures/
+Rock Face 03 surface: Poly Haven, CC0. https://polyhaven.com/a/rock_face_03

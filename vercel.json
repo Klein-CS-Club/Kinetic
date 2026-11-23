@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/assets/:file(.*\\.webp)",
+      "destination": "https://cdn.jsdelivr.net/gh/Klein-CS-Club/Kinetic@61ecf99192711bc31c778e5ebcb9567b61a1b35b/assets/:file"
+    }
+  ]
+}
