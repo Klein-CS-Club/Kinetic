@@ -47,7 +47,7 @@ for(const n of [...nodes]){
  if(hierarchy[objectKind(p)]?.includes(wanted))n.parent=p.id;
 }
 persist();
-const tour=[['Explore your universe','Take a short tour of the map and planning tools.'],['Add your first object','Open Workspace tools, then Add object. Start with a galaxy, or group several galaxies in a cluster.'],['Build inside it','Select a galaxy to add stellar systems. Systems contain planets, and planets contain moons.'],['Arrange the work','Zoom in with the wheel, drag empty space to orbit, and drag an object’s label to move it. Priority controls its size.'],['Plan and revise','Open an object’s tools to edit its owner, dependencies, and deadline, compare staffing, or remove it.']];
+const tour=[['Explore your universe','Take a short tour of the map and planning tools.'],['Add your first object','Choose Add object on the tool rail. Start with a galaxy, or group several galaxies in a cluster.'],['Build inside it','Select a galaxy to add stellar systems. Systems contain planets, and planets contain moons.'],['Arrange the work','Zoom in with the wheel, drag empty space to orbit, and drag an object’s label to move it. Priority controls its size.'],['Plan and revise','Open the Inspector to edit its owner, dependencies, and deadline, compare staffing, or remove it.']];
 let step=0;
 function tutorial(){const [title,body]=tour[step];$('guideTitle').textContent=title;$('guideText').textContent=body;$('next').textContent=step===0?'Start tour':step===tour.length-1?'Finish':'Next';if(!$('guide').open)$('guide').showModal()}
 $('skip').onclick=()=>$('guide').close();$('next').onclick=()=>{if(++step<tour.length)tutorial();else $('guide').close()};
@@ -80,11 +80,27 @@ function render(){
  if(!active&&!n.parent)list=false;
  if(active!==n.id){scenario=false;capacity=1;active=n.id}
  const items=children(n.id),tasks=leaves(n),done=tasks.filter(t=>t.status==='Done').length;
- $('toolbar').innerHTML=`<button id="tools" aria-expanded="${panelOpen}">☷ &nbsp; Workspace tools</button><div><a href="#explore">Universes</a> / ${path(n).map(t=>t===n?esc(t.name):`<button class="crumb" data-go="${t.id}">${esc(t.name)}</button>`).join(' / ')}</div>`;
+ const canAdd=Boolean(hierarchy[objectKind(n)]?.length);
+ const trail=path(n).map(t=>t===n?esc(t.name):`<button class="crumb" data-go="${t.id}">${esc(t.name)}</button>`).join(' / ');
+ $('toolbar').innerHTML=`<div class="trail"><a href="#explore">Universes</a> / ${trail}</div><div class="toolrail" role="toolbar" aria-label="Universe controls">
+ <button id="add" ${canAdd?'':'hidden'}><i>＋</i>Add object</button>
+ <button id="tools" aria-controls="details" aria-expanded="${panelOpen}"><i>☷</i>Inspector</button>
+ <button id="view"><i>${list?'◎':'≡'}</i>${list?'Map':'List'}</button>
+ <button id="parent" ${n.parent?'':'hidden'}><i>↶</i>Up a level</button></div>
+ <div class="mapzoom" ${list?'hidden':''}><button aria-label="Zoom out" id="zoomOut">−</button><button aria-label="Zoom in" id="zoomIn">＋</button></div>`;
+ $('zoomIn').onclick=()=>window.adjustZoom?.(.72);$('zoomOut').onclick=()=>window.adjustZoom?.(1.38);
  $('details').hidden=!panelOpen;
  $('tools').onclick=()=>{panelOpen=!panelOpen;$('details').hidden=!panelOpen;$('tools').setAttribute('aria-expanded',panelOpen)};
  $('space').innerHTML=`<div class="${list?'list':'map'}">${(items.length?items:n.parent?[n]:[]).map((t,i)=>`<button data-id="${t.id}" data-kind="${esc(objectKind(t))}" class="${list?'':'object'}" ${items.length?'data-go="'+t.id+'"':'id="leafEdit"'}><strong>${esc(t.name)}</strong><small>${esc(objectKind(t))} · ${esc(t.status)}</small></button>`).join('')}</div>`;
- $('details').innerHTML=`<div class="actions"><button id="view">${list?'Orbital map':'List view'}</button><button id="parent" ${n.parent?'':'hidden'}>↑ Up one level</button><button id="add" ${hierarchy[objectKind(n)]?.length?'':'hidden'}>Add object</button></div><p>${esc(n.description||'')}</p><p>${done} of ${tasks.length} tasks complete</p><p>${esc(n.owner||'Unassigned')} · ${Number(n.people??1)} assigned${n.due?' · Due '+esc(n.due):''}</p>${n.dep?'<p>Starts after '+esc(get(n.dep)?.name)+'</p>':''}<div class="actions"><button id="edit">Edit details</button><button id="download">Export atlas</button><button id="remove">Remove ${n.parent?'object':'universe'}</button><button id="tour">Tutorial</button></div><hr><small class="kicker">FINISH FORECAST</small><h2>Day ${schedule(tasks,scenario?capacity:1)}</h2><p>From project start · ${scenario?capacity:1} available worker${scenario&&capacity>1?'s':''}</p>${scenario?`<label>Scenario capacity<select id="cap">${[1,2,3,4].map(v=>`<option ${v===capacity?'selected':''}>${v}</option>`).join('')}</select></label><p>Baseline · day ${schedule(tasks,1)}</p>`:''}<div class="actions"><button id="scenario">${scenario?'Discard scenario':'Compare staffing'}</button></div>`;
+ $('details').innerHTML=`<header class="inspect-head"><small>${esc(n.parent?objectKind(n):'Universe')}</small><h2>${esc(n.name)}</h2></header>
+ ${n.description?`<p>${esc(n.description)}</p>`:''}
+ <div class="inspect-section"><h3>Work</h3><dl><dt>Complete</dt><dd>${done} / ${tasks.length}</dd><dt>Owner</dt><dd>${esc(n.owner||'Unassigned')}</dd><dt>People</dt><dd>${Number(n.people??1)}</dd>${n.due?`<dt>Due</dt><dd>${esc(n.due)}</dd>`:''}</dl>
+ ${n.dep?`<p>Starts after ${esc(get(n.dep)?.name)}</p>`:''}<button id="edit">Edit details</button></div>
+ <div class="inspect-section"><h3>Finish forecast</h3><strong class="forecast-value">Day ${schedule(tasks,scenario?capacity:1)}</strong><p>From start · ${scenario?capacity:1} worker${scenario&&capacity>1?'s':''}</p>
+ ${scenario?`<label>Scenario capacity<select id="cap">${[1,2,3,4].map(v=>`<option ${v===capacity?'selected':''}>${v}</option>`).join('')}</select></label><p>Baseline · day ${schedule(tasks,1)}</p>`:''}
+ <button id="scenario">${scenario?'Discard scenario':'Compare staffing'}</button></div>
+ <details class="inspect-section"><summary>Manage workspace</summary><div class="actions"><button id="download">Export atlas</button><button id="tour">Tutorial</button><button data-audio></button><button id="remove">Remove ${n.parent?'object':'universe'}</button></div></details>`;
+ window.syncSoundSettings?.();
  window.mountSystem?.(n.id);document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>openNode(b.dataset.go));
  $('parent').onclick=()=>openNode(n.parent);$('view').onclick=()=>{list=!list;localStorage.setItem('kinetic.view',list?'list':'orbit');render()};$('add').onclick=()=>edit(n,true);$('edit').onclick=()=>edit(n,false);if($('leafEdit'))$('leafEdit').onclick=()=>edit(n,false);
  $('tour').onclick=()=>{step=0;tutorial()};

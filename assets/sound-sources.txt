@@ -1,0 +1,1 @@
+Interface and sci-fi sounds by Kenney (CC0). click_002.wav from https://github.com/Calinou/kenney-interface-sounds at 4596a49. door_open_000.ogg from https://github.com/Boyquotes/kenney-sci-fi-sounds-for-godot at c094967, shortened and filtered for navigation.
