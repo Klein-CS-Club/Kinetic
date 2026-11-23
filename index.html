@@ -1,43 +1,6 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Kinetic · Client website launch</title><link rel="icon" href="data:,"><link rel="stylesheet" href="style.css">
-</head>
-<body>
-<div class="observatory">
-  <div class="sky" aria-hidden="true"><canvas id="stars"></canvas><div class="horizon"></div></div>
-  <header class="bar"><div class="brand"><i class="mark"></i>Kinetic</div><span class="bar-label">Project simulator</span><span class="sample">Simulated sample data</span></header>
-  <main>
-    <div class="intro"><div><div class="eyebrow">STUDIO NORTH <span>/</span> CREATIVE AGENCY</div><h1>Client website <em>launch</em></h1></div><div class="deadline"><span>Client deadline</span><strong>Day 15</strong></div></div>
-    <div class="workspace">
-      <section class="map" aria-label="Project dependency map">
-        <div class="system">
-          <svg class="routes" viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true">
-            <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M1 1L6 4L1 7" fill="none" stroke="#dcc4a6"/></marker></defs>
-            <g class="tracks"><path d="M -80 226 Q 330 268 830 -38"/><path d="M -100 260 Q 495 348 1130 -130"/><path d="M -40 325 Q 485 382 1160 -46"/></g>
-            <g class="links"><path d="M 153 205 Q 265 211 372 166" marker-end="url(#arrow)"/><path d="M 592 112 Q 700 66 819 77" marker-end="url(#arrow)"/><path class="parallel" d="M 592 112 Q 705 109 819 77"/></g>
-            <g class="signals"><circle r="2.5" class="signal main-signal"/><circle r="2.5" class="signal extra-signal"/></g>
-          </svg>
-          <span class="route-label first">Layouts approved</span><span class="route-label second">Both tasks done</span>
-          <button class="planet design" data-stage="Design"><canvas data-planet="design"></canvas><span>Design</span></button>
-          <button class="planet development" data-stage="Development"><canvas data-planet="development"></canvas><span>Development</span><small id="risk"></small></button>
-          <button class="planet launch" data-stage="Launch"><canvas data-planet="launch"></canvas><span>Launch</span></button>
-        </div>
-        <div class="legend"><i></i> Planet size reflects assigned work</div>
-      </section>
-      <aside class="inspector"><div class="eyebrow">SELECTED STAGE</div><h2 id="stage"></h2><p id="stage-note"></p><div id="tasks"></div>
-        <div class="staff"><label>Development staffing</label><div role="group" aria-label="Development staffing"><button data-count="1">1 developer</button><button data-count="2">2 developers</button></div></div>
-      </aside>
-    </div>
-    <section class="forecast"><div class="section-head"><h2>Finish forecast</h2><button id="reset"><b aria-hidden="true">↺</b> Reset simulation</button></div>
-      <div class="cards"><article id="baseline" class="result"></article><article id="scenario" class="result" aria-live="polite"></article></div>
-    </section>
-  </main>
-</div>
-<footer class="site-footer">
-  <div class="footer-identity"><span class="brand"><i class="mark" aria-hidden="true"></i>Kinetic</span><span>Project planning simulator</span></div>
-  <span>Teens Hack Houston 2026 · Business Track</span>
-</footer>
-<script src="planets.js"></script><script src="app.js"></script>
-</body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101411"><title>Kinetic — Project atlas</title><link rel="stylesheet" href="atlas.css"></head><body>
+<header><a class="word" href="#">◈ Kinetic</a><nav><a href="#explore">Explorer</a><a href="simulation.html">Simulation</a><a href="#studio">Studio</a></nav><a class="enter" href="#explore">Open atlas ↗</a></header>
+<main id="home"><section class="hero"><div class="sky" aria-hidden="true"><div class="rings"></div><canvas data-planet="development"></canvas><div class="front"></div></div><div class="copy"><span class="kicker">PROJECT ATLAS</span><h1>Work in<br><em>orbit.</em></h1><p>Explore your organization, trace dependencies, and see how a staffing decision changes launch day.</p><a class="primary" href="#explore">Enter the explorer <b>↗</b></a></div><a class="caption" href="#explore">● &nbsp; Studio North <span>Explore system ↗</span></a></section>
+<section class="catalog"><div class="heading"><h2>Field atlas</h2><span>3 sample organizations</span></div><div id="samples"></div></section>
+<section id="studio"><h2>Kinetic Studio</h2><p>Spatial planning software by Nam Tran, Astin Zong, and Assirem Benseddik.</p></section></main>
+<main id="workspace" hidden><div id="toolbar"></div><article id="space"></article><aside id="details"></aside></main><dialog id="editor"><form id="form"><h2 id="formTitle"></h2><label>Name<input name="name" required maxlength="90"></label><label>Type<input name="kind" required maxlength="30"></label><label>Owner<input name="owner" maxlength="80"></label><label>Deadline<input name="due" type="date"></label><label>Effort in person-days<input name="effort" type="number" min="1" max="999" required></label><label>Status<select name="status"><option>Planned</option><option>In progress</option><option>Done</option></select></label><label>Starts after<select name="dep"></select></label><div><button type="button" onclick="editor.close()">Cancel</button> <button class="primary">Save</button></div></form></dialog><script src="atlas.js"></script><script src="planets.js"></script></body></html>

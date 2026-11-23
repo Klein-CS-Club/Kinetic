@@ -1,7 +1,7 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
-const types = {'index.html':'text/html','style.css':'text/css','app.js':'text/javascript','planets.js':'text/javascript'};
+const types = {'simulation.html':'text/html','atlas.css':'text/css','atlas.js':'text/javascript','index.html':'text/html','style.css':'text/css','app.js':'text/javascript','planets.js':'text/javascript'};
 http.createServer((req,res) => {
   const file = req.url === '/' ? 'index.html' : req.url.slice(1);
   if (!Object.hasOwn(types,file)) {res.writeHead(404).end(); return;}
@@ -9,4 +9,4 @@ http.createServer((req,res) => {
     if(err){res.writeHead(500).end(); return;}
     res.writeHead(200,{'Content-Type':types[file]+'; charset=utf-8','Cache-Control':'no-store'}).end(data);
   });
-}).listen(4174,'127.0.0.1',()=>console.log('Kinetic running at http://127.0.0.1:4174/'));
+}).listen(4174,'0.0.0.0',()=>console.log('Kinetic running at http://127.0.0.1:4174/'));
